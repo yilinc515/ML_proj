@@ -78,9 +78,6 @@ class SupRes(nn.Module):
         x = torch.mul(self.su5(x), x)
         x = self.deconv(x)
         return x
-
-        
-        # raise NotImplementedError
     
     
 
@@ -101,42 +98,40 @@ if __name__ == "__main__":
         if LEARNING_RATE is None: raise TypeError("Learning rate has to be provided for train mode")
         if BATCH_SIZE is None: raise TypeError("batch size has to be provided for train mode")
         if EPOCHS is None: raise TypeError("number of epochs has to be provided for train mode")
-        TRAIN_IMAGES = np.load(os.path.join(DATA_DIR, "fruit_images.npy"))
-        TRAIN_LABELS = np.load(os.path.join(DATA_DIR, "fruit_labels.npy"))
-        DEV_IMAGES = np.load(os.path.join(DATA_DIR, "fruit_dev_images.npy"))
-        DEV_LABELS = np.load(os.path.join(DATA_DIR, "fruit_dev_labels.npy"))
+        TRAIN_COMP_IMAGES = np.load(os.path.join(DATA_DIR, "train_comp_images.npy"))
+        TRAIN_TRUE_IMAGES = np.load(os.path.join(DATA_DIR, "train_true_images.npy"))
+        DEV_COMP_IMAGES = np.load(os.path.join(DATA_DIR, "dev_comp_images.npy"))
+        DEV_TRUE_IMAGES = np.load(os.path.join(DATA_DIR, "dev_true_images.npy"))
         
         ### TODO format your dataset to the appropriate shape/dimensions necessary to be input into your model.
         ### TODO get the following parameters and name them accordingly: 
         # [N_IMAGES] Number of images in the training corpus 
-        N_IMAGES = TRAIN_IMAGES.shape[0]
+        N_IMAGES = TRAIN_COMP_IMAGES.shape[0]
         # [HEIGHT] Height and [WIDTH] width dimensions of each image
-        HEIGHT = TRAIN_IMAGES.shape[1]
-        WIDTH = TRAIN_IMAGES.shape[2]
-        # [N_CLASSES] number of output classes
-        N_CLASSES = len(np.unique(TRAIN_LABELS))    
-        
-
+        HEIGHT = TRAIN_COMP_IMAGES.shape[1]
+        WIDTH = TRAIN_COMP_IMAGES.shape[2]
+  
+    
         # do online data augmentation via affine transformation
-        rotate45 = rotate(TRAIN_IMAGES, 45)
-        print(rotate45.shape)
-        rotate90 = rotate(TRAIN_IMAGES, 90)
-        rotate180 = rotate(TRAIN_IMAGES, 180)
-        TRAIN_IMAGES = np.concatenate((TRAIN_IMAGES, rotate45, rotate90, rotate180))
-        TRAIN_LABELS = np.concatenate((TRAIN_LABELS, TRAIN_LABELS, TRAIN_LABELS, TRAIN_LABELS))
-        print(TRAIN_IMAGES.shape)
+        rotate45 = rotate(TRAIN_COMP_IMAGES, 45)
+  
+        rotate90 = rotate(TRAIN_COMP_IMAGES, 90)
+        rotate180 = rotate(TRAIN_COMP_IMAGES, 180)
+        TRAIN_IMAGES = np.concatenate((TRAIN_COMP_IMAGES, rotate45, rotate90, rotate180))
+        TRAIN_TRUE_IMAGES = np.concatenate(rotate(TRAIN_TRUE_IMAGES, 45), rotate(TRAIN_TRUE_IMAGES, 90), rotate(TRAIN_TRUE_IMAGES, 180))
 
         ### TODO Normalize each of the individual images to a mean of 0 and a variance of 1
         # add a dimension of channels 
-        flat_train_imgs = TRAIN_IMAGES[:, np.newaxis, :, :]
-        flat_dev_imgs = DEV_IMAGES[:, np.newaxis, :, :]
-        # Normalize 
-        train_mean = flat_train_imgs.mean(axis=(2, 3), keepdims=True)
-        train_std = flat_train_imgs.std(axis=(2, 3), keepdims=True)   
-        flat_train_imgs = (flat_train_imgs - train_mean) / train_std
-        dev_mean = flat_dev_imgs.mean(axis=(2, 3), keepdims=True)
-        dev_std = flat_dev_imgs.std(axis=(2, 3), keepdims=True)   
-        flat_dev_imgs = (flat_dev_imgs - dev_mean) / dev_std
+        #flat_train_imgs = TRAIN_IMAGES[:, np.newaxis, :, :]
+        #flat_dev_imgs = DEV_IMAGES[:, np.newaxis, :, :]
+
+        # # Normalize 
+        # train_mean = flat_train_imgs.mean(axis=(2, 3), keepdims=True)
+        # train_std = flat_train_imgs.std(axis=(2, 3), keepdims=True)   
+        # flat_train_imgs = (flat_train_imgs - train_mean) / train_std
+        # dev_mean = flat_dev_imgs.mean(axis=(2, 3), keepdims=True)
+        # dev_std = flat_dev_imgs.std(axis=(2, 3), keepdims=True)   
+        # flat_dev_imgs = (flat_dev_imgs - dev_mean) / dev_std
 
         #TRAIN_LABELS = TRAIN_LABELS[:, np.newaxis]
         #DEV_LABELS = DEV_LABELS[:, np.newaxis]
@@ -149,34 +144,32 @@ if __name__ == "__main__":
         
         # do not touch the following 4 lines (these write logging model performance to an output file 
         # stored in LOG_DIR with the prefix being the time the model was trained.)
-        LOGFILE = open(os.path.join(LOG_DIR, f"bestmodel.log"),'w')
-        log_fieldnames = ['step', 'train_loss', 'train_acc', 'dev_loss', 'dev_acc']
+        LOGFILE = open(os.path.join(LOG_DIR, f"SupRes.log"),'w')
+        log_fieldnames = ['step', 'train_loss','train_PSNR', 'train_SSIM', 'dev_loss','dev_PSNR', 'dev_SSIM']
         logger = csv.DictWriter(LOGFILE, log_fieldnames)
         logger.writeheader()
         
         ### TODO change depending on your model's instantiation
         
         #raise NotImplementedError
-        model = BestModel(input_height = HEIGHT, input_width= WIDTH,
-                                 n_classes=N_CLASSES)
+
+        model = SupRes(upscale_factor = 2)
         
         ### TODO (OPTIONAL) : you can change the choice of optimizer here if you wish.
         optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
         
     
         for step in range(EPOCHS):
-            i = np.random.choice(flat_train_imgs.shape[0], size=BATCH_SIZE, replace=False)
-            x = torch.from_numpy(flat_train_imgs[i].astype(np.float32))
-            y = torch.from_numpy(TRAIN_LABELS[i].astype(np.int))
-            
-    
+            i = np.random.choice(TRAIN_COMP_IMAGES.shape[0], size=BATCH_SIZE, replace=False)
+            x = torch.from_numpy(TRAIN_COMP_IMAGES[i].astype(np.float32))
+            y = torch.from_numpy(TRAIN_TRUE_IMAGES[i].astype(np.int))
 
             
-            # Forward pass: Get logits for x
-            logits = model(x)
+            # Forward pass: Get restored  image for x
+            restored = model(x)
             
             # Compute loss
-            loss = F.l1_loss(logits, y)
+            loss = F.l1_loss(restored, y)
             # Zero gradients, perform a backward pass, and update the weights.
             optimizer.zero_grad()
             loss.backward()
@@ -185,13 +178,16 @@ if __name__ == "__main__":
             # log model performance every 100 epochs
             if step % 100 == 0:
                 train_acc, train_loss = approx_train_acc_and_loss(model, flat_train_imgs, TRAIN_LABELS)
-                dev_acc, dev_loss = dev_acc_and_loss(model, flat_dev_imgs, DEV_LABELS)
+                dev_loss = dev_loss(model, DEV_COMP_IMAGES, DEV_TRUE_IMAGES)
+                dev_psnr, dev_ssim = dev_psnr_and_ssim(model, DEV_COMP_IMAGES, DEV_TRUE_IMAGES)
                 step_metrics = {
                     'step': step, 
                     'train_loss': loss.item(), 
-                    'train_acc': train_acc,
+                    'train_PSNR': 
+                    'train_SSIM':
                     'dev_loss': dev_loss,
-                    'dev_acc': dev_acc
+                    'train_PSNR':dev_psnr, 
+                    'train_SSIM':dev_ssim
                 }
 
                 print(f"On step {step}:\tTrain loss {train_loss}\t|\tDev acc is {dev_acc}")
