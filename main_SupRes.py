@@ -175,8 +175,8 @@ if __name__ == "__main__":
             loss.backward()
             optimizer.step()
             
-            # log model performance every 100 epochs
-            if step % 100 == 0:
+            # log model performance every  epochs
+            if step % 50 == 0:
                 train_psnr, train_ssim = approx_train_psnr_ssim(model, TRAIN_COMP_IMAGES, TRAIN_TRUE_IMAGES)
                 dev_loss, dev_psnr, dev_ssim = dev_loss_psnr_ssim(model, DEV_COMP_IMAGES, DEV_TRUE_IMAGES)
                 step_metrics = {
