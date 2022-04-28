@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from utils.io_argparse import get_args
 from utils.accuracies import (approx_train_psnr_ssim, dev_loss_psnr_ssim)
 from skimage.transform import rotate
-from skimage.util import random_noise
+#from skimage.util import random_noise
 
 class SupRes(nn.Module):
     ### TODO change #channels
@@ -189,7 +189,7 @@ if __name__ == "__main__":
                     'train_SSIM':dev_ssim
                 }
 
-                print(f"On step {step}:\tTrain loss {train_loss}\tTrain PSNR {train_psnr}\tTrain SSIM {train_ssim}\tDev loss {dev_loss}\tDev PSNR {dev_psnr}\tDev SSIM {dev_ssim}")
+                print(f"On step {step}:\tTrain loss {loss.item()}\tTrain PSNR {train_psnr}\tTrain SSIM {train_ssim}\tDev loss {dev_loss}\tDev PSNR {dev_psnr}\tDev SSIM {dev_ssim}")
                 logger.writerow(step_metrics)
         LOGFILE.close()
         

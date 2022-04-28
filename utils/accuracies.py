@@ -13,7 +13,7 @@ from skimage.metrics import peak_signal_noise_ratio as psnr
     
 #     return psnr(img1, img2)
 
-def avg_PSNR(model, train_est : np.ndarray, train_true : np.ndarray):
+def avg_PSNR(train_est : np.ndarray, train_true : np.ndarray):
     sum = 0
     for i in N_IMAGES:
         sum = sum + psnr(train_true[i], train_est[i])
@@ -23,7 +23,7 @@ def avg_PSNR(model, train_est : np.ndarray, train_true : np.ndarray):
 # def SSIM(img1, img2):
 #     return ssim(img1, img2, channel_axis = #TODO)
 
-def avg_SSIM(model, train_est : np.ndarray, train_true : np.ndarray):
+def avg_SSIM(train_est : np.ndarray, train_true : np.ndarray):
     sum = 0
     for i in N_IMAGES:
         sum = sum + ssim(train_true[i], train_est[i], channel_axis = 0)
