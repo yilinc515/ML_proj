@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from utils.io_argparse import get_args
-from utils.accuracies import (dev_acc_and_loss, accuracy, approx_train_acc_and_loss)
+from utils.accuracies import (approx_train_psnr_ssim, dev_loss_psnr_ssim)
 from skimage.transform import rotate
 from skimage.util import random_noise
 
@@ -162,7 +162,7 @@ if __name__ == "__main__":
         for step in range(EPOCHS):
             i = np.random.choice(TRAIN_COMP_IMAGES.shape[0], size=BATCH_SIZE, replace=False)
             x = torch.from_numpy(TRAIN_COMP_IMAGES[i].astype(np.float32))
-            y = torch.from_numpy(TRAIN_TRUE_IMAGES[i].astype(np.int))
+            y = torch.from_numpy(TRAIN_TRUE_IMAGES[i].astype(np.float32))
 
             
             # Forward pass: Get restored  image for x
@@ -177,26 +177,25 @@ if __name__ == "__main__":
             
             # log model performance every 100 epochs
             if step % 100 == 0:
-                train_acc, train_loss = approx_train_acc_and_loss(model, flat_train_imgs, TRAIN_LABELS)
-                dev_loss = dev_loss(model, DEV_COMP_IMAGES, DEV_TRUE_IMAGES)
-                dev_psnr, dev_ssim = dev_psnr_and_ssim(model, DEV_COMP_IMAGES, DEV_TRUE_IMAGES)
+                train_psnr, train_ssim = approx_train_psnr_ssim(model, TRAIN_COMP_IMAGES, TRAIN_TRUE_IMAGES)
+                dev_loss, dev_psnr, dev_ssim = dev_loss_psnr_ssim(model, DEV_COMP_IMAGES, DEV_TRUE_IMAGES)
                 step_metrics = {
                     'step': step, 
                     'train_loss': loss.item(), 
-                    'train_PSNR': 
-                    'train_SSIM':
+                    'train_PSNR': train_psnr,
+                    'train_SSIM': train_ssim,
                     'dev_loss': dev_loss,
                     'train_PSNR':dev_psnr, 
                     'train_SSIM':dev_ssim
                 }
 
-                print(f"On step {step}:\tTrain loss {train_loss}\t|\tDev acc is {dev_acc}")
+                print(f"On step {step}:\tTrain loss {train_loss}\tTrain PSNR {train_psnr}\tTrain SSIM {train_ssim}\tDev loss {dev_loss}\tDev PSNR {dev_psnr}\tDev SSIM {dev_ssim}")
                 logger.writerow(step_metrics)
         LOGFILE.close()
         
         ### TODO (OPTIONAL) You can remove the date prefix if you don't want to save every model you train
         ### i.e. "{DATE_PREFIX}_bestmodel.pt" > "bestmodel.pt"
-        model_savepath = os.path.join(MODEL_SAVE_DIR,f"{DATE_PREFIX}_bestmodel.pt")
+        model_savepath = os.path.join(MODEL_SAVE_DIR,f"{DATE_PREFIX}_supres.pt")
         
         
         print("Training completed, saving model at {model_savepath}")
@@ -208,7 +207,7 @@ if __name__ == "__main__":
         WEIGHTS_FILE = arguments.get('weights')
         if WEIGHTS_FILE is None : raise TypeError("for inference, model weights must be specified")
         if PREDICTIONS_FILE is None : raise TypeError("for inference, a predictions file must be specified for output.")
-        TEST_IMAGES = np.load(os.path.join(DATA_DIR, "fruit_test_images.npy"))
+        TEST_IMAGES = np.load(os.path.join(DATA_DIR, "dev_comp_images.npy"))
         
         model = torch.load(WEIGHTS_FILE)
         
@@ -216,20 +215,18 @@ if __name__ == "__main__":
         for test_case in TEST_IMAGES:
             
             ### TODO implement any normalization schemes you need to apply to your test dataset before inference
-            test_case = test_case[:, np.newaxis, :, :]
-            test_mean = test_case.mean(axis=(2, 3), keepdims=True)
-            test_std = test_case.std(axis=(2, 3), keepdims=True)   
-            test_case = (test_case - test_mean) / test_std
+            # test_case = test_case[:, np.newaxis, :, :]
+            # test_mean = test_case.mean(axis=(2, 3), keepdims=True)
+            # test_std = test_case.std(axis=(2, 3), keepdims=True)   
+            # test_case = (test_case - test_mean) / test_std
             # raise NotImplementedError
             
-            
             x = torch.from_numpy(test_case.astype(np.float32))
-            x = x.view(1,-1)
-            logits = model(x)
-            pred = torch.max(logits, 1)[1]
+            #x = x.view(1,-1)
+            pred = model(x)
             predictions.append(pred.item())
         print(f"Storing predictions in {PREDICTIONS_FILE}")
         predictions = np.array(predictions)
-        np.savetxt(PREDICTIONS_FILE, predictions, fmt="%d")
+        np.save(PREDICTIONS_FILE, predictions)
 
     else: raise Exception("Mode not recognized")

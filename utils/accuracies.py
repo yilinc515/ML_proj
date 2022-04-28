@@ -39,83 +39,21 @@ def SSIM(img1, img2):
 def avg_SSIM(model, train_data : np.ndarray, train_labels : np.ndarray):
     return #TODO
 
-
-def approx_train_loss(model, train_comp : np.ndarray, train_true : np.ndarray) -> np.float64:
+def approx_train_psnr_ssim(model, train_comp : np.ndarray, train_true : np.ndarray) -> np.float64:
     idxs = np.random.choice(len(train_data), 4000, replace=False)
     x = torch.from_numpy(train_comp[idxs].astype(np.float32))
-    y = torch.from_numpy(train_true[idxs].astype(np.int))
+    y = torch.from_numpy(train_true[idxs].astype(np.float32))
     restored = model(x)
-    #loss = F.cross_entropy(restored, y)
-    loss = F.loss(restored, y)
-    
-    return  loss.item()
-
-def dev_loss((model, dev_comp : np.ndarray, dev_true : np.ndarray) -> np.float64:
-    return dev_loss
-def dev_psnr_and_ssim(model, dev_comp : np.ndarray, dev_true : np.ndarray) -> np.float64:
-
-    return dev_psnr, dev_loss
-
-def dev_acc_and_loss(model, dev_data : np.ndarray, dev_labels : np.ndarray) -> np.float64:
-    """Given a model, a validation dataset and its associated labels, calcualte the simple accuracy when the
-    model is applied to the validation dataset.
-    This function is meant to be run during training to evaluate model validation accuracy.
-
-    Args:
-        model (pytorch model): model class obj
-        dev_data (np.ndarray): validation data
-        dev_labels (np.ndarray): validation labels
-
-    Returns:
-        np.float64: simple validation accuracy
-    """
-    x = torch.from_numpy(dev_data.astype(np.float32))
-    y = torch.from_numpy(dev_labels.astype(np.int))
-    logits = model(x)
-    loss = F.cross_entropy(logits, y)
-    y_pred = torch.max(logits, 1)[1]
-    return accuracy(dev_labels, y_pred.numpy()), loss.item()
-
-
-
-def approx_train_acc_and_loss(model, train_data : np.ndarray, train_labels : np.ndarray) -> np.float64:
-    """Given a model, training data and its associated labels, calculate the simple accuracy when the 
-    model is applied to the training dataset.
-    This function is meant to be run during training to evaluate model training accuracy during training.
-
-    Args:
-        model (pytorch model): model class object.
-        train_data (np.ndarray): training data
-        train_labels (np.ndarray): training labels
-
-    Returns:
-        np.float64: simple accuracy
-    """
-    idxs = np.random.choice(len(train_data), 4000, replace=False)
-    x = torch.from_numpy(train_data[idxs].astype(np.float32))
-    y = torch.from_numpy(train_labels[idxs].astype(np.int))
-    logits = model(x)
-    loss = F.cross_entropy(logits, y)
-    y_pred = torch.max(logits, 1)[1]
+    #TODO
     return accuracy(train_labels[idxs], y_pred.numpy()), loss.item()
 
 
-def dev_acc_and_loss(model, dev_data : np.ndarray, dev_labels : np.ndarray) -> np.float64:
-    """Given a model, a validation dataset and its associated labels, calcualte the simple accuracy when the
-    model is applied to the validation dataset.
-    This function is meant to be run during training to evaluate model validation accuracy.
+def dev_loss_psnr_ssim((model, dev_comp : np.ndarray, dev_true : np.ndarray) -> np.float64:
+    x = torch.from_numpy(dev_comp.astype(np.float32))
+    y = torch.from_numpy(dev_true.astype(np.float32))
+    restored = model(x)
+    #loss = F.cross_entropy(restored, y)
+    loss = F.l1_loss(restored, y)
+    #TODO
+    return loss.item(), dev_psnr, dev_ssim
 
-    Args:
-        model (pytorch model): model class obj
-        dev_data (np.ndarray): validation data
-        dev_labels (np.ndarray): validation labels
-
-    Returns:
-        np.float64: simple validation accuracy
-    """
-    x = torch.from_numpy(dev_data.astype(np.float32))
-    y = torch.from_numpy(dev_labels.astype(np.int))
-    logits = model(x)
-    loss = F.cross_entropy(logits, y)
-    y_pred = torch.max(logits, 1)[1]
-    return accuracy(dev_labels, y_pred.numpy()), loss.item()
