@@ -2,7 +2,8 @@ from re import L
 import torch
 import numpy as np
 import torch.nn.functional as F
-from main_SupRes import N_IMAGES
+#from main_SupRes import N_IMAGES
+#from main_SupRes import N_IMAGES
 from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import peak_signal_noise_ratio as psnr
 
@@ -15,7 +16,8 @@ from skimage.metrics import peak_signal_noise_ratio as psnr
 
 def avg_PSNR(train_est : np.ndarray, train_true : np.ndarray):
     sum = 0
-    for i in N_IMAGES:
+    N_IMAGES = train_est.shape[0]
+    for i in range(N_IMAGES):
         sum = sum + psnr(train_true[i], train_est[i])
     return sum/N_IMAGES
 
@@ -25,7 +27,8 @@ def avg_PSNR(train_est : np.ndarray, train_true : np.ndarray):
 
 def avg_SSIM(train_est : np.ndarray, train_true : np.ndarray):
     sum = 0
-    for i in N_IMAGES:
+    N_IMAGES = train_est.shape[0]
+    for i in range(N_IMAGES):
         sum = sum + ssim(train_true[i], train_est[i], channel_axis = 0)
     return sum/N_IMAGES
  

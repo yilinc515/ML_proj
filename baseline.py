@@ -3,7 +3,9 @@ import os
 import numpy as np
 from utils.accuracies import (avg_PSNR, avg_SSIM)
 
+
 DATA_DIR = "datasets/"
+print("Loading from", DATA_DIR)
 TRAIN_COMP_IMAGES = np.load(os.path.join(DATA_DIR, "train_comp_images.npy"))
 TRAIN_TRUE_IMAGES = np.load(os.path.join(DATA_DIR, "train_true_images.npy"))
 DEV_COMP_IMAGES = np.load(os.path.join(DATA_DIR, "dev_comp_images.npy"))
@@ -13,6 +15,7 @@ DEV_TRUE_IMAGES = np.load(os.path.join(DATA_DIR, "dev_true_images.npy"))
 # Train images
 ################
 # interpolation
+print("Computing train")
 bilinear = []
 bicubic = []
 for i in TRAIN_COMP_IMAGES:
