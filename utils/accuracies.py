@@ -18,7 +18,7 @@ def avg_PSNR(train_est : np.ndarray, train_true : np.ndarray):
     sum = 0
     N_IMAGES = train_est.shape[0]
     for i in range(N_IMAGES):
-        sum = sum + psnr(train_true[i], train_est[i])
+        sum = sum + psnr(train_true[i], train_est[i], data_range = 255)
     return sum/N_IMAGES
 
 # SSIM
@@ -29,12 +29,12 @@ def avg_SSIM(train_est : np.ndarray, train_true : np.ndarray):
     sum = 0
     N_IMAGES = train_est.shape[0]
     for i in range(N_IMAGES):
-        sum = sum + ssim(train_true[i], train_est[i], channel_axis = 0)
+        sum = sum + ssim(train_true[i], train_est[i], channel_axis = 0, data_range = 255)
     return sum/N_IMAGES
  
 
 def approx_train_psnr_ssim(model, train_comp : np.ndarray, train_true : np.ndarray) -> np.float64:
-    idxs = np.random.choice(train_comp.shape[0], 4000, replace=False)
+    idxs = np.random.choice(train_comp.shape[0], 400, replace=False)
     x = torch.from_numpy(train_comp[idxs].astype(np.float32))
     y = torch.from_numpy(train_true[idxs].astype(np.float32))
     restored = model(x)

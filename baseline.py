@@ -2,6 +2,7 @@ from skimage.transform import resize
 import os
 import numpy as np
 from utils.accuracies import (avg_PSNR, avg_SSIM)
+import matplotlib.pyplot as plt
 
 
 DATA_DIR = "datasets/"
@@ -15,15 +16,22 @@ DEV_TRUE_IMAGES = np.load(os.path.join(DATA_DIR, "dev_true_images.npy"))
 # Train images
 ################
 # interpolation
+print(TRAIN_COMP_IMAGES.shape)
+print(TRAIN_TRUE_IMAGES.shape)
+plt.imshow(np.moveaxis(TRAIN_COMP_IMAGES[0], 0, -1))
 print("Computing train")
 bilinear = []
 bicubic = []
 for i in TRAIN_COMP_IMAGES:
-    l = resize(i, (3, 224, 224), order = 1)  #bilinear interpolation
+    l = resize(i, (3, 224, 224), order = 1, preserve_range=True)  #bilinear interpolation
+    l = l.astype(np.int64)
     bilinear.append(l)
-    c = resize(i, (3, 224, 224), order = 3)  #bicubic interpolation
+    c = resize(i, (3, 224, 224), order = 3, preserve_range=True)  #bicubic interpolation
+    c = c.astype(np.int64)
     bicubic.append(c)
 bilinear = np.array(bilinear)
+print(bilinear.shape)
+plt.imshow(np.moveaxis(bilinear[0], 0, -1))
 bicubic = np.array(bicubic)
 
 # compute PSNR and SSIM
@@ -49,9 +57,11 @@ print("Bi-bicubic interpolation train SSIM: ", bicubic_ssim )
 bilinear = []
 bicubic = []
 for i in DEV_COMP_IMAGES:
-    l = resize(i, (3, 224, 224), order = 1)  #bilinear interpolation
+    l = resize(i, (3, 224, 224), order = 1, preserve_range=True)  #bilinear interpolation
+    l = l.astype(np.int64)
     bilinear.append(l)
-    c = resize(i, (3, 224, 224), order = 3)  #bicubic interpolation
+    c = resize(i, (3, 224, 224), order = 3, preserve_range=True)  #bicubic interpolation
+    c = c.astype(np.int64)
     bicubic.append(c)
 bilinear = np.array(bilinear)
 bicubic = np.array(bicubic)
