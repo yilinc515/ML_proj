@@ -113,12 +113,12 @@ if __name__ == "__main__":
   
     
         # do online data augmentation via affine transformation
-        rotate45 = rotate(TRAIN_COMP_IMAGES, 45)
+        # rotate45 = rotate(TRAIN_COMP_IMAGES, 45)
   
-        rotate90 = rotate(TRAIN_COMP_IMAGES, 90)
-        rotate180 = rotate(TRAIN_COMP_IMAGES, 180)
-        TRAIN_IMAGES = np.concatenate((TRAIN_COMP_IMAGES, rotate45, rotate90, rotate180))
-        TRAIN_TRUE_IMAGES = np.concatenate(rotate(TRAIN_TRUE_IMAGES, 45), rotate(TRAIN_TRUE_IMAGES, 90), rotate(TRAIN_TRUE_IMAGES, 180))
+        # rotate90 = rotate(TRAIN_COMP_IMAGES, 90)
+        # rotate180 = rotate(TRAIN_COMP_IMAGES, 180)
+        # TRAIN_IMAGES = np.concatenate((TRAIN_COMP_IMAGES, rotate45, rotate90, rotate180))
+        # TRAIN_TRUE_IMAGES = np.concatenate(rotate(TRAIN_TRUE_IMAGES, 45), rotate(TRAIN_TRUE_IMAGES, 90), rotate(TRAIN_TRUE_IMAGES, 180))
 
         ### TODO Normalize each of the individual images to a mean of 0 and a variance of 1
         # add a dimension of channels 

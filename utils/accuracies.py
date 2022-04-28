@@ -18,7 +18,7 @@ def avg_PSNR(train_est : np.ndarray, train_true : np.ndarray):
     sum = 0
     N_IMAGES = train_est.shape[0]
     for i in range(N_IMAGES):
-        sum = sum + psnr(train_true[i], train_est[i], data_range = 255)
+        sum = sum + psnr(train_true[i].astype(np.int64), train_est[i].astype(np.int64), data_range = 255)
     return sum/N_IMAGES
 
 # SSIM
@@ -29,7 +29,7 @@ def avg_SSIM(train_est : np.ndarray, train_true : np.ndarray):
     sum = 0
     N_IMAGES = train_est.shape[0]
     for i in range(N_IMAGES):
-        sum = sum + ssim(train_true[i], train_est[i], channel_axis = 0, data_range = 255)
+        sum = sum + ssim(train_true[i].astype(np.int64), train_est[i].astype(np.int64), channel_axis = 0, data_range = 255)
     return sum/N_IMAGES
  
 
@@ -38,6 +38,8 @@ def approx_train_psnr_ssim(model, train_comp : np.ndarray, train_true : np.ndarr
     x = torch.from_numpy(train_comp[idxs].astype(np.float32))
     y = torch.from_numpy(train_true[idxs].astype(np.float32))
     restored = model(x)
+    restored = restored.detach().numpy()
+    y = y.detach().numpy()
     train_psnr = avg_PSNR(restored, y)
     train_ssim = avg_SSIM(restored, y)
     return train_psnr, train_ssim
@@ -49,6 +51,8 @@ def dev_loss_psnr_ssim(model, dev_comp : np.ndarray, dev_true : np.ndarray) -> n
     restored = model(x)
     #loss = F.cross_entropy(restored, y)
     loss = F.l1_loss(restored, y)
+    restored = restored.detach().numpy()
+    y = y.detach().numpy()
     dev_psnr = avg_PSNR(restored, y)
     dev_ssim = avg_SSIM(restored, y)
     return loss.item(), dev_psnr, dev_ssim
