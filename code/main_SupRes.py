@@ -17,23 +17,21 @@ class SupRes(nn.Module):
     def __init__(self, upscale_factor = 2):
         super().__init__()
         
-        self.conv1=nn.Conv2d(in_channels=3,out_channels=12,kernel_size=3,stride=1,padding=1)
+        self.conv1=nn.Conv2d(in_channels=3,out_channels=6,kernel_size=3,stride=1,padding=1)
 
         self.su1 = nn.Sequential(      
             nn.ReLU(),
-            nn.Conv2d(in_channels=12,out_channels=12,kernel_size=1),                              
+            nn.Conv2d(in_channels=6,out_channels=6,kernel_size=1),                              
             nn.Sigmoid()                      
         )
-        self.prelu1=nn.PReLU()
  
         #Shrinking
-        self.conv2=nn.Conv2d(in_channels=12,out_channels=6,kernel_size=1,stride=1,padding=0)
+        self.conv2=nn.Conv2d(in_channels=6,out_channels=6,kernel_size=1,stride=1,padding=0)
         self.su2 = nn.Sequential(      
             nn.ReLU(),   
             nn.Conv2d(in_channels=6,out_channels=6,kernel_size=1),                              
             nn.Sigmoid()                      
         )
-        self.prelu2=nn.PReLU()
  
         # Non-linear Mapping
         self.conv3=nn.Conv2d(in_channels=6,out_channels=6,kernel_size=3,stride=1,padding=1)
@@ -48,23 +46,18 @@ class SupRes(nn.Module):
             nn.Conv2d(in_channels=6,out_channels=6,kernel_size=1),                              
             nn.Sigmoid()                      
         )
-        self.conv6=nn.Conv2d(in_channels=6,out_channels=6,kernel_size=3,stride=1,padding=1)
-        self.su6 = nn.Sequential(      
+ 
+ 
+        # Expanding
+        self.conv5=nn.Conv2d(in_channels=6,out_channels=6,kernel_size=1,stride=1,padding=0)
+        self.su5 = nn.Sequential(      
             nn.ReLU(),   
             nn.Conv2d(in_channels=6,out_channels=6,kernel_size=1),                              
             nn.Sigmoid()                      
         )
  
-        # Expanding
-        self.conv5=nn.Conv2d(in_channels=6,out_channels=12,kernel_size=1,stride=1,padding=0)
-        self.su5 = nn.Sequential(      
-            nn.ReLU(),   
-            nn.Conv2d(in_channels=12,out_channels=12,kernel_size=1),                              
-            nn.Sigmoid()                      
-        )
-        self.prelu5=nn.PReLU()
         # Deconvolution
-        self.deconv= nn.ConvTranspose2d(in_channels=12,out_channels=3,kernel_size=7,stride=upscale_factor, padding=3, output_padding=1)
+        self.deconv= nn.ConvTranspose2d(in_channels=6,out_channels=3,kernel_size=7,stride=upscale_factor, padding=3, output_padding=1)
 
         # raise NotImplementedError
         
@@ -74,21 +67,15 @@ class SupRes(nn.Module):
         ### TODO Implement your best model's forward pass module  
         #   
         x = self.conv1(x)
-        #x = torch.mul(self.su1(x), x)
-        x = self.prelu1(x)
+        x = torch.mul(self.su1(x), x)
         x = self.conv2(x)
-        #x = torch.mul(self.su2(x), x)
-        x = self.prelu2(x)
+        x = torch.mul(self.su2(x), x)
         x = self.conv3(x)
         x = torch.mul(self.su3(x), x)
         x = self.conv4(x)
         x = torch.mul(self.su4(x), x)
-        #x = self.conv6(x)
-        #x = torch.mul(self.su6(x), x)
-        
         x = self.conv5(x)
-        #x = torch.mul(self.su5(x), x)
-        x = self.prelu5(x)
+        x = torch.mul(self.su5(x), x)
         x = self.deconv(x)
         return x
     
