@@ -1,5 +1,6 @@
-# Dataset
-DIV2K, see 
+# Dataset 
+
+DIV2K, see Div2k_dataset_pre_processing.ipynb for pre-processing code
 
 # List of models 
 
@@ -18,6 +19,9 @@ main_espcn(4layers): espcn with 4 convolutional layers, no selection unit
 main_selnet: simplified version of selnet (6000 epochs, 35 min; 20000 epochs, 1h45min)  
 main_selnet4x: simplified version of selnet for 4x upscale (7500 epochs, 42 min, batch size=50)  
 
+# Model evaluation
+
+See model_baseline_test_plot.ipynb for detailed performance visualization code
 
 
 
