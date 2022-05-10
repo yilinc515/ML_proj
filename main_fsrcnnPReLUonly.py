@@ -1,14 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat May  7 22:57:29 2022
-
-@author: Lenovo
-"""
-
 import sys
 import csv
 import os
-from turtle import xcor
 import numpy as np
 import datetime
 import torch
@@ -16,29 +8,33 @@ import torch.nn as nn
 import torch.nn.functional as F
 from utils.io_argparse import get_args
 from utils.accuracies import (approx_train_psnr_ssim, dev_loss_psnr_ssim)
-from skimage.transform import rotate
-#from skimage.util import random_noise
 
+#fsrcnn with original Prelu activation (10000 epochs, 54 min)
 class SupRes(nn.Module):
     ### TODO change #channels
     def __init__(self, upscale_factor = 2):
         super().__init__()
         
-        #the three convolutional layers
-        self.conv1=nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, 
-                             padding=1)
-        
-        self.conv2=nn.Conv2d(in_channels=16, out_channels=8, kernel_size=3, stride=1, 
-                             padding=1)
-        
-        self.conv3=nn.Conv2d(in_channels=8, out_channels=3*upscale_factor*upscale_factor, 
-                             kernel_size=3, stride=1, padding=1)
+        self.conv1=nn.Conv2d(in_channels=3,out_channels=15,kernel_size=3,stride=1,padding=1)
+        self.su1 = nn.PReLU()
  
-                       
+        #Shrinking
+        self.conv2=nn.Conv2d(in_channels=15,out_channels=7,kernel_size=1,stride=1,padding=0)
+        self.su2 = nn.PReLU()
  
-        #pixelshuffle
-        self.pixelshuffle=nn.PixelShuffle(upscale_factor)
-        #self.sigmoid = nn.Sigmoid()
+        # Non-linear Mapping
+        self.conv3=nn.Conv2d(in_channels=7,out_channels=7,kernel_size=3,stride=1,padding=1)
+        self.su3 = nn.PReLU()
+
+        self.conv4=nn.Conv2d(in_channels=7,out_channels=7,kernel_size=3,stride=1,padding=1)
+        self.su4 = nn.PReLU()
+ 
+        # Expanding
+        self.conv5=nn.Conv2d(in_channels=7,out_channels=15,kernel_size=1,stride=1,padding=0)
+        self.su5 = nn.PReLU()
+ 
+        # Deconvolution
+        self.deconv= nn.ConvTranspose2d(in_channels=15,out_channels=3,kernel_size=7,stride=upscale_factor, padding=3, output_padding=1)
 
         # raise NotImplementedError
         
@@ -47,16 +43,18 @@ class SupRes(nn.Module):
         
         ### TODO Implement your best model's forward pass module  
         #   
-        x = nn.ReLU(self.conv1(x))
-        x = nn.ReLU(self.conv2(x))
+        x = self.conv1(x)
+        x = self.su1(x)
+        x = self.conv2(x)
+        x = self.su2(x)
         x = self.conv3(x)
-        x = self.pixelshuffle(x)
-        #x = self.Sigmoid(x)
-
+        x = self.su3(x)
+        x = self.conv4(x)
+        x = self.su4(x)
+        x = self.conv5(x)
+        x = self.su5(x)
+        x = self.deconv(x)
         return x
-    
-    
-
 if __name__ == "__main__":
     arguments = get_args(sys.argv)
     MODE = arguments.get('mode')
@@ -120,7 +118,7 @@ if __name__ == "__main__":
         
         # do not touch the following 4 lines (these write logging model performance to an output file 
         # stored in LOG_DIR with the prefix being the time the model was trained.)
-        LOGFILE = open(os.path.join(LOG_DIR, f"SupRes.log"),'w')
+        LOGFILE = open(os.path.join(LOG_DIR, f"SupRes_v1.1.log"),'w')
         log_fieldnames = ['step', 'train_loss','train_PSNR', 'train_SSIM', 'dev_loss','dev_PSNR', 'dev_SSIM']
         logger = csv.DictWriter(LOGFILE, log_fieldnames)
         logger.writeheader()
@@ -130,6 +128,7 @@ if __name__ == "__main__":
         #raise NotImplementedError
 
         model = SupRes(upscale_factor = 2)
+        
         
         ### TODO (OPTIONAL) : you can change the choice of optimizer here if you wish.
         optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
@@ -161,8 +160,8 @@ if __name__ == "__main__":
                     'train_PSNR': train_psnr,
                     'train_SSIM': train_ssim,
                     'dev_loss': dev_loss,
-                    'train_PSNR':dev_psnr, 
-                    'train_SSIM':dev_ssim
+                    'dev_PSNR':dev_psnr, 
+                    'dev_SSIM':dev_ssim
                 }
 
                 print(f"On step {step}:\tTrain loss {loss.item()}\tTrain PSNR {train_psnr}\tTrain SSIM {train_ssim}\tDev loss {dev_loss}\tDev PSNR {dev_psnr}\tDev SSIM {dev_ssim}")
@@ -203,6 +202,7 @@ if __name__ == "__main__":
             predictions.append(pred.item())
         print(f"Storing predictions in {PREDICTIONS_FILE}")
         predictions = np.array(predictions)
+	print(predictions.shape)
         np.save(PREDICTIONS_FILE, predictions)
 
     else: raise Exception("Mode not recognized")
