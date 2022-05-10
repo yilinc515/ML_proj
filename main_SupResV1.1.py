@@ -230,7 +230,7 @@ if __name__ == "__main__":
             predictions.append(pred.item())
         print(f"Storing predictions in {PREDICTIONS_FILE}")
         predictions = np.array(predictions)
-	print(predictions.shape)
+	    print(predictions.shape)
         np.save(PREDICTIONS_FILE, predictions)
 
     else: raise Exception("Mode not recognized")
