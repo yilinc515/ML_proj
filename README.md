@@ -1,8 +1,11 @@
-# List of models: 
+# Dataset
+DIV2K, see 
+
+# List of models 
 
 ## Main models
 main_SupRes: initial model based on FSRCNN with selection unit modification. Underwent extensive hyperparameter tuning and testing.   
-** main_SupResV1.1: version of our modified FSRCNN with best performance. Training results included in presentation. ** 
+**main_SupResV1.1: version of our modified FSRCNN with best performance. Training results included in presentation.**    
 main_fsrcnnPReLUonly: main model 1.1 with PReLu activation as in FSRCNN (10000 epochs, 54 min)  
 main_fsrcnn+res: main model 1.1 with residual (10000 epochs, around 55 min)   
 main_fsrcnn+res4x: main model 1.1 with residual for 4x upscale  
